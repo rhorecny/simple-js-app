@@ -19,7 +19,7 @@ function add(pokemon) {
 }
 
 //add function test to put another pokemon in repository
-add({name: 'Rattata', height: 1, type:['Normal']});
+add({name: 'Rattata', height: 1, type:['Normal'], abilities:['Run Away', 'Guts']});
 //creates li to ul tag in html to display buttons for each pokemon in list with event listener to display their details
 function addListItem(pokemon){
     let pokemonList = document.querySelector('.pokemon-list');
