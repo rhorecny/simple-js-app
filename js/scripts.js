@@ -1,6 +1,11 @@
 var pokemonRepository = (function () {
   var repository = [];
-  var apiUrl = "https://pokeapi.co/api/v2/pokemon/?limit=150";
+  var apiUrl = "https://pokeapi.co/api/v2/pokemon/";
+  //limit and offest for pokeapi.co for load more
+  var limit = 20;
+  var offset = 0;
+
+  //add pokemon to repository
   function add(pokemon) {
     if (
       typeof pokemon === "object" &&
@@ -9,12 +14,53 @@ var pokemonRepository = (function () {
     ) {
       repository.push(pokemon);
     } else {
-      console.log("add a pokemon");
+      console.error("add a pokemon");
     }
   }
+
   function getAll() {
     return repository;
   }
+  //load more function to add additonal cards on button click
+  function loadMore() {
+    var updatedApiUrl = apiUrl + "?offset=" + offset + "&limit=" + limit;
+
+    return $.ajax(updatedApiUrl)
+      .then(function (json) {
+        var newPokemons = [];
+
+        json.results.forEach(function (item) {
+          var existingPokemon = repository.find(function (p) {
+            return p.name === item.name;
+          });
+
+          if (!existingPokemon) {
+            var pokemon = {
+              name: item.name,
+              detailsUrl: item.url,
+            };
+            add(pokemon);
+            newPokemons.push(pokemon);
+          }
+        });
+
+        offset += limit;
+        return newPokemons;
+      })
+      .catch(function (e) {
+        console.error(e);
+      });
+  }
+  // load more button on click
+  $("#loadMoreButton").on("click", function () {
+    loadMore().then(function (newPokemons) {
+      // After loading more data, add new cards to the page
+      newPokemons.forEach(function (pokemon) {
+        pokemonRepository.addListItem(pokemon);
+      });
+    });
+  });
+  //pokemon card creator
   function addListItem(pokemon) {
     pokemonRepository.loadDetails(pokemon).then(function () {
       var row = $(".row");
@@ -44,7 +90,6 @@ var pokemonRepository = (function () {
   }
   function showDetails(item) {
     pokemonRepository.loadDetails(item).then(function () {
-      console.log(item);
       showModal(item);
     });
   }
@@ -57,7 +102,6 @@ var pokemonRepository = (function () {
             detailsUrl: item.url,
           };
           add(pokemon);
-          console.log(pokemon);
         });
       })
       .catch(function (e) {
@@ -85,11 +129,11 @@ var pokemonRepository = (function () {
     let modalTitle = $(".modal-title");
     let modalHeader = $(".modal-header");
 
-  //clear modal
+    //clear modal
     modalTitle.empty();
     modalBody.empty();
 
-   //Creates name in modal
+    //Creates name in modal
     let nameElement = $("<h1>" + item.name + "</h1>");
     // creates image in modal
     let imageElementFront = $('<img class="modal-img" style="width:50%">');
@@ -106,7 +150,6 @@ var pokemonRepository = (function () {
     modalBody.append(imageElementBack);
     modalBody.append(heightElement);
     modalBody.append(weightElement);
-
   }
 
   return {
@@ -120,7 +163,7 @@ var pokemonRepository = (function () {
   };
 })();
 pokemonRepository.loadList().then(function () {
-  // Now the data is loaded!
+  // loading data to list
   pokemonRepository.getAll().forEach(function (pokemon) {
     pokemonRepository.addListItem(pokemon);
   });
